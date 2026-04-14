@@ -12,6 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "Data"
 CANDIDATES_CSV_PATH = DATA_DIR / "Sample Candidate Data - combined_candidates.csv"
 JDS_PDF_PATH = DATA_DIR / "Job Descriptions.pdf"
+ENV_PATH = BASE_DIR / ".env"
 
 
 def _split_csv_value(value):
@@ -58,61 +59,83 @@ def _candidate_payload(row):
     }
 
 
-def _postgres_settings(database):
+def _read_env_file():
+    values = {}
+    if not ENV_PATH.exists():
+        return values
+
+    for line in ENV_PATH.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
+            continue
+        key, value = stripped.split("=", 1)
+        values[key.strip()] = value.strip()
+    return values
+
+
+def _env_setting(name, default=None):
+    return os.getenv(name) or _read_env_file().get(name, default)
+
+
+def _postgres_settings(database=None):
     return {
-        "host": os.getenv("PGHOST", "127.0.0.1"),
-        "port": int(os.getenv("PGPORT", "5432")),
-        "user": os.getenv("PGUSER", "postgres"),
-        "password": os.getenv("PGPASSWORD"),
-        "dbname": database,
+        "host": _env_setting("PGHOST", "127.0.0.1"),
+        "port": int(_env_setting("PGPORT", "5432")),
+        "user": _env_setting("PGUSER", "postgres"),
+        "password": _env_setting("PGPASSWORD"),
+        "dbname": database or _env_setting("PGDATABASE", "Higher AI"),
     }
 
 
-def _ensure_database(database_name):
-    password = os.getenv("PGPASSWORD")
+def _get_app_connection():
+    password = _env_setting("PGPASSWORD")
     if not password:
         return False
+    return psycopg2.connect(**_postgres_settings())
 
-    admin_settings = _postgres_settings(os.getenv("PGADMIN_DB", "postgres"))
-    connection = psycopg2.connect(**admin_settings)
-    connection.autocommit = True
-    try:
-        with connection.cursor() as cursor:
-            cursor.execute(
-                "SELECT 1 FROM pg_database WHERE datname = %s",
-                (database_name,),
+
+def _ensure_storage(connection):
+    with connection.cursor() as cursor:
+        cursor.execute("CREATE SCHEMA IF NOT EXISTS candidates")
+        cursor.execute("CREATE SCHEMA IF NOT EXISTS jobs")
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS candidates.candidates (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                skills JSONB NOT NULL,
+                experience DOUBLE PRECISION NOT NULL,
+                projects JSONB NOT NULL,
+                raw_data JSONB NOT NULL
             )
-            if cursor.fetchone() is None:
-                cursor.execute(f'CREATE DATABASE "{database_name}"')
-    finally:
-        connection.close()
-    return True
+            """
+        )
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS jobs.jobs (
+                id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                skills JSONB NOT NULL,
+                experience DOUBLE PRECISION NOT NULL,
+                description TEXT NOT NULL
+            )
+            """
+        )
 
 
 def _sync_candidates_to_postgres(candidates, source_rows):
-    if not _ensure_database("candidates"):
+    connection = _get_app_connection()
+    if not connection:
         return
 
-    connection = psycopg2.connect(**_postgres_settings("candidates"))
     try:
         with connection:
+            _ensure_storage(connection)
             with connection.cursor() as cursor:
-                cursor.execute(
-                    """
-                    CREATE TABLE IF NOT EXISTS candidates (
-                        id TEXT PRIMARY KEY,
-                        name TEXT NOT NULL,
-                        skills JSONB NOT NULL,
-                        experience DOUBLE PRECISION NOT NULL,
-                        projects JSONB NOT NULL,
-                        raw_data JSONB NOT NULL
-                    )
-                    """
-                )
                 for candidate, row in zip(candidates, source_rows):
                     cursor.execute(
                         """
-                        INSERT INTO candidates (id, name, skills, experience, projects, raw_data)
+                        INSERT INTO candidates.candidates (id, name, skills, experience, projects, raw_data)
                         VALUES (%s, %s, %s::jsonb, %s, %s::jsonb, %s::jsonb)
                         ON CONFLICT (id) DO UPDATE SET
                             name = EXCLUDED.name,
@@ -135,28 +158,18 @@ def _sync_candidates_to_postgres(candidates, source_rows):
 
 
 def _sync_jds_to_postgres(jds):
-    if not _ensure_database("jobs"):
+    connection = _get_app_connection()
+    if not connection:
         return
 
-    connection = psycopg2.connect(**_postgres_settings("jobs"))
     try:
         with connection:
+            _ensure_storage(connection)
             with connection.cursor() as cursor:
-                cursor.execute(
-                    """
-                    CREATE TABLE IF NOT EXISTS job_descriptions (
-                        id TEXT PRIMARY KEY,
-                        title TEXT NOT NULL,
-                        skills JSONB NOT NULL,
-                        experience DOUBLE PRECISION NOT NULL,
-                        description TEXT NOT NULL
-                    )
-                    """
-                )
                 for jd in jds:
                     cursor.execute(
                         """
-                        INSERT INTO job_descriptions (id, title, skills, experience, description)
+                        INSERT INTO jobs.jobs (id, title, skills, experience, description)
                         VALUES (%s, %s, %s::jsonb, %s, %s)
                         ON CONFLICT (id) DO UPDATE SET
                             title = EXCLUDED.title,

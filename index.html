@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Higher AI</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        :root{--dark:#1a1a2e;--red:#e94560;--blue:#4361ee;--teal:#2ec4b6;--orange:#ff9f1c;--bg:#f0f2f5;--white:#fff;--light:#e9ecef;--text:#212529;--muted:#6c757d;--green:#2a9d8f;--yellow:#f4a261;--danger:#e76f51;--shadow:0 2px 8px rgba(0,0,0,.08);--radius:.75rem}
+        *{box-sizing:border-box}body{margin:0;font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text)}
+        .topbar{position:fixed;inset:0 0 auto 0;z-index:1000;display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:1rem 2rem;background:var(--dark);box-shadow:0 8px 24px rgba(26,26,46,.2)}
+        .brand{color:#fff;font-weight:800;font-size:1.2rem}.nav-actions{display:flex;gap:.75rem;flex-wrap:wrap}
+        .nav-btn,.button,.ghost,.icon-btn{border:0;cursor:pointer;transition:.2s ease;font:inherit}
+        .nav-btn{background:rgba(255,255,255,.08);color:#fff;padding:.65rem 1rem;border-radius:999px;font-weight:700}.nav-btn.active,.nav-btn:hover{background:var(--red)}
+        .main{padding-top:5.6rem;min-height:100vh;background:radial-gradient(circle at top right,rgba(67,97,238,.12),transparent 28%),linear-gradient(180deg,#f7f8fb 0%,var(--bg) 100%)}
+        .section{display:none;padding:2rem}.section.active{display:block}
+        h1,h2,h3,h4{margin:0 0 .5rem;font-weight:800}p{margin:0;color:var(--muted);line-height:1.6}
+        .grid3,.jobs-grid,.match-grid,.mini-grid,.modal-grid{display:grid;gap:1rem}.grid3{grid-template-columns:repeat(3,minmax(0,1fr));margin:1.5rem 0 2rem}.jobs-grid{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+        .card,.stat,.match-card,.toolbar,.summary,.empty,.modal-box{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow)}
+        .card,.stat,.match-card,.toolbar,.summary,.empty{padding:1.5rem}.stat{border-left:6px solid transparent}.value{font-size:1.9rem;font-weight:800;margin-bottom:.35rem}.label{color:var(--muted);font-weight:600}
+        .row,.header,.toolbar-row,.skills{display:flex;gap:.5rem;flex-wrap:wrap}.header{justify-content:space-between;align-items:center;gap:1rem;margin-bottom:1.25rem}
+        .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}.meta{margin-top:.35rem;color:var(--muted);font-size:.95rem}
+        .badge{display:inline-flex;align-items:center;padding:.25rem .6rem;border-radius:999px;font-size:.75rem;font-weight:700}.required{background:var(--blue);color:#fff}.optional{background:var(--light);color:var(--text)}.experience{background:rgba(255,159,28,.15);color:#b56500}
+        .button,.ghost{padding:.5rem 1.25rem;border-radius:.75rem;font-weight:700;margin-top:1rem;display:inline-flex;align-items:center;justify-content:center}.button{background:var(--blue);color:#fff}.button:hover{background:#334fd8}.ghost{background:rgba(67,97,238,.08);color:var(--blue)}.ghost:hover{background:rgba(67,97,238,.16)}
+        .toolbar{margin-bottom:1rem}.toolbar-row{align-items:end}.field{display:flex;flex-direction:column;gap:.5rem;flex:1 1 320px}label{font-weight:700}
+        input,select{width:100%;padding:.8rem .95rem;border-radius:.75rem;border:1px solid #d8dce3;background:#fff;font:inherit;color:var(--text)}input:focus,select:focus{outline:2px solid rgba(67,97,238,.18);border-color:var(--blue)}
+        .desc{margin:1rem 0;color:var(--text);line-height:1.7;max-height:11rem;overflow:auto;white-space:pre-wrap}.summary{margin-bottom:1rem;border-left:6px solid var(--teal);font-weight:700}
+        .match-card{position:relative;overflow:hidden}.match-card:after{content:'';position:absolute;inset:auto -30px -30px auto;width:120px;height:120px;background:radial-gradient(circle,rgba(67,97,238,.08),transparent 70%)}
+        .match-head{display:flex;justify-content:space-between;gap:1rem;align-items:start;flex-wrap:wrap;margin-bottom:1rem}.rank{display:inline-flex;align-items:center;justify-content:center;min-width:3rem;padding:.45rem .75rem;border-radius:999px;font-weight:800;color:var(--dark);background:#d8dce3}
+        .gold{background:#ffd700}.silver{background:#c0c0c0}.bronze{background:#cd7f32;color:#fff}.score-panel{min-width:220px}.score-value{font-size:1.5rem;font-weight:800;margin-bottom:.5rem}
+        .track{width:100%;height:.8rem;background:var(--light);border-radius:999px;overflow:hidden}.fill{height:100%;border-radius:999px}.mini-grid{grid-template-columns:repeat(2,minmax(0,1fr));margin:1rem 0}
+        .mini{background:#f8f9fb;border-radius:.75rem;padding:.85rem 1rem;border:1px solid #edf0f4}.mini-l{font-size:.8rem;color:var(--muted);font-weight:700;margin-bottom:.35rem}.mini-v{font-size:1rem;font-weight:800}
+        .why{font-weight:800;margin-bottom:.5rem}.explain{background:rgba(67,97,238,.08);border-left:4px solid var(--blue);padding:1rem 1rem 1rem 1.1rem;border-radius:.75rem;color:#28417a;line-height:1.7}
+        .loading,.empty{display:flex;justify-content:center;align-items:center;min-height:180px;text-align:center}.spinner{width:42px;height:42px;border:4px solid rgba(67,97,238,.18);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin-right:1rem}@keyframes spin{to{transform:rotate(360deg)}}
+        .error,.validation{margin-top:1rem;padding:.9rem 1rem;border-radius:.75rem;font-weight:600}.error{background:#ffe5e8;color:#b42336;border:1px solid #f1b7bf}.validation{background:#fff3cd;color:#8a6d3b;border:1px solid #ffe29a}.online{color:var(--green);font-weight:800}.offline{color:var(--danger);font-weight:800}
+        .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(13,15,24,.65);padding:1rem;z-index:2000}.modal.open{display:flex}.modal-box{position:relative;width:min(700px,95vw);max-height:92vh;overflow:auto;padding:1.5rem}
+        .icon-btn{position:absolute;top:.9rem;right:.9rem;width:2.2rem;height:2.2rem;border-radius:50%;background:#f2f4f8;color:var(--text);font-size:1.1rem;font-weight:800}.icon-btn:hover{background:#e6e9ef}
+        .modal-head{display:flex;justify-content:space-between;gap:1rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem;padding-right:2.5rem}.circle{width:94px;height:94px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.4rem;font-weight:800}
+        .banner,.recommend{padding:1rem 1.1rem;border-radius:.75rem;margin:1rem 0;font-weight:700}.banner{background:#f4f7fb;border:1px solid #dfe7f5}.modal-grid{grid-template-columns:repeat(2,minmax(0,1fr));margin:1rem 0 1.5rem}
+        .score-card{padding:1rem;border-radius:.75rem;background:#fafbfc;border:1px solid #eef1f4}.block{margin-top:1.5rem}.list{list-style:none;padding:0;margin:.75rem 0 0;display:grid;gap:.5rem}.list li{background:#fafbfc;border-radius:.75rem;padding:.8rem 1rem}
+        .ok li:before{content:'✓';color:var(--green);font-weight:800;margin-right:.65rem}.bad li:before{content:'✗';color:var(--danger);font-weight:800;margin-right:.65rem}.detail-group{margin-top:.9rem}.detail-title{margin-bottom:.45rem;font-weight:800}.none{color:var(--muted);font-style:italic}
+        .full{background:#f7f9fc;border:1px solid #e4ebf4;border-radius:.75rem;padding:1rem 1.1rem}.full h4{margin-top:1rem;margin-bottom:.4rem;font-size:1rem}.full h4:first-child{margin-top:0}.full p{color:var(--text);margin-bottom:.7rem}
+        .rec-strong{background:#e7f7f1;color:#116149;border:1px solid #bfe9d8}.rec-potential{background:#fff4d6;color:#8a6300;border:1px solid #f6de97}.rec-partial{background:#ffe8de;color:#9f4427;border:1px solid #f4c0ad}
+        @media (max-width:900px){.grid3{grid-template-columns:1fr}.match-head,.modal-head{flex-direction:column;align-items:start}.score-panel{width:100%}}
+        @media (max-width:600px){.topbar{padding:1rem}.section{padding:1rem}.jobs-grid,.mini-grid,.modal-grid{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <nav class="topbar">
+        <div class="brand">⚡ Higher AI</div>
+        <div class="nav-actions">
+            <button class="nav-btn active" data-go="dashboard">Dashboard</button>
+            <button class="nav-btn" data-go="browse">Browse Jobs</button>
+            <button class="nav-btn" data-go="match">Match Explorer</button>
+        </div>
+    </nav>
+    <main class="main">
+        <section id="dashboard" class="section active">
+            <div>
+                <h1>Welcome to Higher AI</h1>
+                <p>AI-Powered Job Candidate Matching Engine</p>
+            </div>
+            <div class="grid3">
+                <div class="stat" style="border-left-color:#4361ee"><div id="jobs-stat" class="value">-</div><div class="label">Jobs Available</div></div>
+                <div class="stat" style="border-left-color:#2ec4b6"><div id="cand-stat" class="value">-</div><div class="label">Candidates Indexed</div></div>
+                <div class="stat" style="border-left-color:#ff9f1c"><div id="api-stat" class="value">Checking...</div><div class="label">API Status</div></div>
+            </div>
+            <div class="header"><div><h2>Available Job Descriptions</h2><p>Browse the roles currently indexed by Higher AI.</p></div></div>
+            <div id="dash-error"></div>
+            <div id="dash-jobs" class="jobs-grid"></div>
+        </section>
+        <section id="browse" class="section">
+            <div class="header">
+                <div><h2>Browse Job Descriptions</h2><p>Search by title or skill to narrow the list instantly.</p></div>
+                <div class="field" style="max-width:380px"><label for="job-search">Search</label><input id="job-search" type="text" placeholder="Search by title or skill..."></div>
+            </div>
+            <div id="browse-error"></div>
+            <div id="browse-jobs" class="jobs-grid"></div>
+        </section>
+        <section id="match" class="section">
+            <div class="header"><div><h2>Match Explorer</h2><p>Compare candidates and inspect the reasoning behind each score.</p></div></div>
+            <div class="toolbar">
+                <div class="toolbar-row">
+                    <div class="field">
+                        <label for="jd-select">Select a Job Description</label>
+                        <select id="jd-select"><option value="">-- Select a Job --</option></select>
+                    </div>
+                    <button id="find-btn" class="button">Find Matches</button>
+                </div>
+                <div id="match-validation"></div>
+                <div id="match-error"></div>
+            </div>
+            <div id="match-results"></div>
+        </section>
+    </main>
+    <div id="modal" class="modal" aria-hidden="true">
+        <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <button id="modal-close" class="icon-btn" aria-label="Close">×</button>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+    <script>
+        const API='http://localhost:8000';
+        const state={jobs:null,jobsLoaded:false,matchesByJob:{},matchMeta:{},section:'dashboard'};
+        const el={
+            sections:document.querySelectorAll('.section'),
+            navButtons:document.querySelectorAll('.nav-btn'),
+            jobsStat:document.getElementById('jobs-stat'),
+            candStat:document.getElementById('cand-stat'),
+            apiStat:document.getElementById('api-stat'),
+            dashJobs:document.getElementById('dash-jobs'),
+            dashError:document.getElementById('dash-error'),
+            browseJobs:document.getElementById('browse-jobs'),
+            browseError:document.getElementById('browse-error'),
+            jobSearch:document.getElementById('job-search'),
+            jdSelect:document.getElementById('jd-select'),
+            findBtn:document.getElementById('find-btn'),
+            matchValidation:document.getElementById('match-validation'),
+            matchError:document.getElementById('match-error'),
+            matchResults:document.getElementById('match-results'),
+            modal:document.getElementById('modal'),
+            modalClose:document.getElementById('modal-close'),
+            modalContent:document.getElementById('modal-content')
+        };
+
+        function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+        function errorBox(){return '<div class="error">Failed to load data. Make sure the Higher AI API is running at http://localhost:8000.</div>'}
+        function validationBox(m){return '<div class="validation">'+esc(m)+'</div>'}
+        function loading(t){return '<div class="loading card"><div class="spinner"></div><div>'+esc(t)+'</div></div>'}
+        function pct(v){return typeof v==='number'&&!Number.isNaN(v)?Math.round(v*100)+'%':'-'}
+        function color(v){if(v>=.7)return'var(--green)';if(v>=.4)return'var(--yellow)';return'var(--danger)'}
+        function rankClass(i){return i===0?'gold':i===1?'silver':i===2?'bronze':''}
+        function recClass(t){const u=String(t||'').toUpperCase();if(u.includes('STRONG'))return'rec-strong';if(u.includes('POTENTIAL'))return'rec-potential';if(u.includes('PARTIAL')||u.includes('WEAK'))return'rec-partial';return'rec-potential'}
+        async function getJson(path){const r=await fetch(API+path);if(!r.ok)throw new Error('request failed');return r.json()}
+        function candidateName(match){
+            if(match.candidate_name||match.name)return match.candidate_name||match.name;
+            const llm=typeof match.explanation==='string'?match.explanation:match.explanation&&match.explanation.llm;
+            if(llm&&llm.includes(' is a candidate for '))return llm.split(' is a candidate for ')[0];
+            return 'Candidate '+(match.candidate_id||'');
+        }
+        function explanationObj(match){
+            if(typeof match.explanation==='string')return{structured:{matched:[],missing:[],extra:[]},llm:match.explanation};
+            if(match.explanation&&typeof match.explanation==='object')return{structured:match.explanation.structured||{matched:[],missing:[],extra:[]},llm:match.explanation.llm||''};
+            return{structured:{matched:[],missing:[],extra:[]},llm:''};
+        }
+        function breakdown(match,exp){
+            const existing=match.score_breakdown||{};
+            const structured=exp.structured||{matched:[],missing:[],extra:[]};
+            const total=structured.matched.length+structured.missing.length;
+            const derived=total>0?structured.matched.length/total:(match.score||0);
+            return{
+                skill_score:typeof existing.skill_score==='number'?existing.skill_score:derived,
+                experience_score:typeof existing.experience_score==='number'?existing.experience_score:null,
+                education_score:typeof existing.education_score==='number'?existing.education_score:null,
+                semantic_score:typeof existing.semantic_score==='number'?existing.semantic_score:null,
+                skill_detail:existing.skill_detail||{
+                    matched_required:structured.matched||[],
+                    missing_required:structured.missing||[],
+                    matched_nice_to_have:structured.extra||[]
+                }
+            };
+        }
+        async function ensureJobs(){
+            if(state.jobsLoaded&&Array.isArray(state.jobs))return state.jobs;
+            const jobs=await getJson('/jds');
+            state.jobs=Array.isArray(jobs)?jobs:[];
+            state.jobsLoaded=true;
+            fillSelect(state.jobs);
+            return state.jobs;
+        }
+        function fillSelect(jobs){
+            const cur=el.jdSelect.value;
+            el.jdSelect.innerHTML=['<option value="">-- Select a Job --</option>'].concat(jobs.map(j=>'<option value="'+esc(j.id)+'">'+esc(j.title)+' ('+esc(j.id)+')</option>')).join('');
+            if(cur)el.jdSelect.value=cur;
+        }
+        function skillBadges(skills){return(skills||[]).map(s=>{const name=typeof s==='string'?s:s.name;const req=!!(s&&s.required);return'<span class="badge '+(req?'required':'optional')+'">'+esc(name)+'</span>'}).join('')}
+        function renderDashboard(jobs){
+            if(!jobs.length){el.dashJobs.innerHTML='<div class="empty">No job descriptions available.</div>';return;}
+            el.dashJobs.innerHTML=jobs.map(job=>`
+                <article class="card">
+                    <h3>${esc(job.title)}</h3>
+                    <div class="meta mono">${esc(job.id)}</div>
+                    <div class="meta">${esc(job.experience)} years experience</div>
+                    <div class="skills" style="margin-top:1rem">${skillBadges(job.skills||[])}</div>
+                    <button class="button" data-action="view-matches" data-job-id="${esc(job.id)}">View Matches</button>
+                </article>
+            `).join('');
+        }
+        function renderBrowse(jobs){
+            if(!jobs.length){el.browseJobs.innerHTML='<div class="empty">No job descriptions available.</div>';return;}
+            el.browseJobs.innerHTML=jobs.map(job=>`
+                <article class="card">
+                    <h3>${esc(job.title)}</h3>
+                    <div class="meta mono">${esc(job.id)}</div>
+                    <div class="desc">${esc(job.description||'')}</div>
+                    <div class="skills"><span class="badge experience">${esc(job.experience)} years experience</span></div>
+                    <div class="skills" style="margin-top:1rem">${skillBadges(job.skills||[])}</div>
+                    <button class="button" data-action="browse-match" data-job-id="${esc(job.id)}">Match Candidates</button>
+                </article>
+            `).join('');
+        }
+        function filterBrowse(){
+            const q=el.jobSearch.value.trim().toLowerCase();
+            const jobs=state.jobs||[];
+            if(!q){renderBrowse(jobs);return;}
+            renderBrowse(jobs.filter(job=>{
+                const title=String(job.title||'').toLowerCase().includes(q);
+                const skill=(job.skills||[]).some(s=>String(s.name||s).toLowerCase().includes(q));
+                return title||skill;
+            }));
+        }
+        async function loadDashboard(){
+            el.dashError.innerHTML='';
+            try{
+                const jobs=await ensureJobs();
+                el.jobsStat.textContent=jobs.length;
+                renderDashboard(jobs);
+            }catch(e){
+                el.jobsStat.textContent='-';
+                el.dashError.innerHTML=errorBox();
+                el.dashJobs.innerHTML='';
+            }
+        }
+        async function loadBrowse(){
+            el.browseError.innerHTML='';
+            try{renderBrowse(await ensureJobs());}
+            catch(e){el.browseError.innerHTML=errorBox();el.browseJobs.innerHTML='';}
+        }
+        async function loadApiStatus(){
+            try{
+                const r=await fetch(API+'/');
+                if(!r.ok)throw new Error();
+                el.apiStat.innerHTML='<span class="online">Online</span>';
+            }catch(e){
+                el.apiStat.innerHTML='<span class="offline">Offline</span>';
+            }
+        }
+        async function loadCandidateCount(){
+            el.candStat.textContent='-';
+            try{
+                const jobs=await ensureJobs();
+                if(!jobs.length)return;
+                const matches=await getJson('/match/'+encodeURIComponent(jobs[0].id));
+                if(Array.isArray(matches)&&matches[0]&&typeof matches[0].total_candidates!=='undefined')el.candStat.textContent=matches[0].total_candidates;
+                else if(matches&&typeof matches.total_candidates!=='undefined')el.candStat.textContent=matches.total_candidates;
+                else el.candStat.textContent='-';
+            }catch(e){el.candStat.textContent='-'}
+        }
+        function showSection(id){
+            state.section=id;
+            el.sections.forEach(s=>s.classList.toggle('active',s.id===id));
+            el.navButtons.forEach(b=>b.classList.toggle('active',b.dataset.go===id));
+            if(id==='browse')loadBrowse();
+            if(id==='match')ensureJobs().catch(()=>{});
+        }
+        function renderMatches(job,matches){
+            if(!Array.isArray(matches)||!matches.length){el.matchResults.innerHTML='<div class="empty">No candidates found for this job description.</div>';return;}
+            const title=matches.job_title||job.title||'Selected Job';
+            const summary='<div class="summary">Showing '+matches.length+' candidates for '+esc(title)+' — sorted by match score</div>';
+            const cards=matches.map((match,index)=>{
+                const name=candidateName(match);
+                const exp=explanationObj(match);
+                const b=breakdown(match,exp);
+                const score=typeof match.score==='number'?match.score:0;
+                const cid=match.candidate_id||match.id||'';
+                return `
+                    <article class="match-card">
+                        <div class="match-head">
+                            <div>
+                                <div class="rank ${rankClass(index)}">#${index+1}</div>
+                                <h3 style="margin-top:.85rem">${esc(name)}</h3>
+                                <div class="meta mono">${esc(cid)}</div>
+                            </div>
+                            <div class="score-panel">
+                                <div class="score-value">${pct(score)}</div>
+                                <div class="track"><div class="fill" style="width:${Math.max(0,Math.min(100,score*100))}%;background:${color(score)}"></div></div>
+                            </div>
+                        </div>
+                        <div class="mini-grid">
+                            <div class="mini"><div class="mini-l">Skills</div><div class="mini-v">${pct(b.skill_score)}</div></div>
+                            <div class="mini"><div class="mini-l">Experience</div><div class="mini-v">${pct(b.experience_score)}</div></div>
+                            <div class="mini"><div class="mini-l">Education</div><div class="mini-v">${pct(b.education_score)}</div></div>
+                            <div class="mini"><div class="mini-l">Relevance</div><div class="mini-v">${pct(b.semantic_score)}</div></div>
+                        </div>
+                        <div class="why">Why this candidate:</div>
+                        <div class="explain">${esc(exp.llm||'No explanation available.')}</div>
+                        <button class="ghost" data-action="full-analysis" data-job-id="${esc(job.id)}" data-candidate-id="${esc(cid)}" data-rank="${index+1}">View Full Analysis</button>
+                    </article>
+                `;
+            }).join('');
+            el.matchResults.innerHTML=summary+'<div class="match-grid">'+cards+'</div>';
+        }
+        async function findMatches(jobId){
+            el.matchValidation.innerHTML='';
+            el.matchError.innerHTML='';
+            const id=jobId||el.jdSelect.value;
+            if(!id){el.matchValidation.innerHTML=validationBox('Please select a job description first.');return;}
+            const jobs=state.jobs||await ensureJobs();
+            const job=jobs.find(j=>j.id===id)||{};
+            el.matchResults.innerHTML=loading('Finding best-fit candidates...');
+            try{
+                const data=await getJson('/match/'+encodeURIComponent(id));
+                const matches=Array.isArray(data)?data:(data.matches||[]);
+                state.matchesByJob[id]=matches;
+                state.matchMeta[id]={job,totalCandidates:data.total_candidates||(Array.isArray(matches)?matches.length:0),jobTitle:data.job_title||job.title||''};
+                renderMatches(job,matches);
+            }catch(e){
+                el.matchError.innerHTML=errorBox();
+                el.matchResults.innerHTML='';
+            }
+        }
+        function explanationHtml(text){
+            const lines=String(text||'').split(/\n+/).filter(Boolean);
+            if(!lines.length)return'<p>No detailed explanation available.</p>';
+            return lines.map(line=>{
+                const t=line.trim();
+                if(t.startsWith('##'))return'<h4>'+esc(t.replace(/^##\s*/,''))+'</h4>';
+                return'<p>'+esc(t)+'</p>';
+            }).join('');
+        }
+        function badgeList(items,cls){
+            if(!items||!items.length)return'<div class="none">None</div>';
+            return items.map(i=>'<span class="badge '+cls+'">'+esc(i)+'</span>').join('');
+        }
+        function modalMarkup(detail,meta,fallback,candidateId,rank){
+            const score=typeof detail.score==='number'?detail.score:(typeof (fallback&&fallback.score)==='number'?fallback.score:0);
+            const name=detail.candidate_name||detail.name||candidateName(fallback||{candidate_id:candidateId});
+            const title=detail.job_title||meta.jobTitle||meta.job&&meta.job.title||'Selected Job';
+            const exp=explanationObj(detail);
+            const b=breakdown(detail,exp);
+            const explanation=typeof detail.explanation==='string'?detail.explanation:(detail.explanation&&detail.explanation.llm)||fallback&&fallback.explanation&&fallback.explanation.llm||'No detailed explanation available.';
+            const strengths=detail.strengths||[];
+            const gaps=detail.gaps||[];
+            const recommendation=detail.recommendation||'POTENTIAL fit based on the available match summary.';
+            const total=detail.total_candidates||meta.totalCandidates||0;
+            const finalRank=detail.rank||rank||'-';
+            const sd=b.skill_detail||{};
+            return `
+                <div class="modal-head">
+                    <div><h2 id="modal-title">${esc(name)}</h2><p>${esc(title)}</p></div>
+                    <div class="circle" style="background:${color(score)}">${pct(score)}</div>
+                </div>
+                <div class="banner">Ranked #${esc(finalRank)} out of ${esc(total)} candidates</div>
+                <div class="modal-grid">
+                    <div class="score-card"><div class="mini-l">Skills</div><div class="mini-v">${pct(b.skill_score)}</div></div>
+                    <div class="score-card"><div class="mini-l">Experience</div><div class="mini-v">${pct(b.experience_score)}</div></div>
+                    <div class="score-card"><div class="mini-l">Education</div><div class="mini-v">${pct(b.education_score)}</div></div>
+                    <div class="score-card"><div class="mini-l">Relevance</div><div class="mini-v">${pct(b.semantic_score)}</div></div>
+                </div>
+                <div class="block">
+                    <h3>Strengths</h3>
+                    ${strengths.length?'<ul class="list ok">'+strengths.map(i=>'<li>'+esc(i)+'</li>').join('')+'</ul>':'<div class="none">None</div>'}
+                </div>
+                <div class="block">
+                    <h3>Gaps & Missing Requirements</h3>
+                    ${gaps.length?'<ul class="list bad">'+gaps.map(i=>'<li>'+esc(i)+'</li>').join('')+'</ul>':'<div class="none">None</div>'}
+                </div>
+                <div class="block">
+                    <h3>Skill Detail</h3>
+                    <div class="detail-group"><div class="detail-title">Matched Required Skills</div><div class="skills">${badgeList(sd.matched_required||[],'required')}</div></div>
+                    <div class="detail-group"><div class="detail-title">Missing Required Skills</div><div class="skills">${badgeList(sd.missing_required||[],'optional')}</div></div>
+                    <div class="detail-group"><div class="detail-title">Nice-to-Have Matched</div><div class="skills">${badgeList(sd.matched_nice_to_have||[],'optional')}</div></div>
+                </div>
+                <div class="block">
+                    <h3>Full Explanation</h3>
+                    <div class="full">${explanationHtml(explanation)}</div>
+                </div>
+                <div class="block">
+                    <h3>Recommendation</h3>
+                    <div class="recommend ${recClass(recommendation)}">${esc(recommendation)}</div>
+                </div>
+            `;
+        }
+        async function openModal(jobId,candidateId,rank){
+            const matches=state.matchesByJob[jobId]||[];
+            const fallback=matches.find(m=>String(m.candidate_id)===String(candidateId));
+            const meta=state.matchMeta[jobId]||{};
+            el.modal.classList.add('open');
+            el.modal.setAttribute('aria-hidden','false');
+            el.modalContent.innerHTML=loading('Loading full candidate analysis...');
+            try{
+                const detail=await getJson('/match/'+encodeURIComponent(jobId)+'/'+encodeURIComponent(candidateId));
+                el.modalContent.innerHTML=modalMarkup(detail,meta,fallback,candidateId,rank);
+            }catch(e){
+                if(fallback){
+                    const derived={
+                        ...fallback,
+                        candidate_name:candidateName(fallback),
+                        job_title:meta.jobTitle||meta.job&&meta.job.title||'Selected Job',
+                        total_candidates:meta.totalCandidates||matches.length,
+                        rank:rank,
+                        strengths:(fallback.explanation&&fallback.explanation.structured&&fallback.explanation.structured.matched||[]).map(s=>'Matched skill: '+s),
+                        gaps:(fallback.explanation&&fallback.explanation.structured&&fallback.explanation.structured.missing||[]).map(s=>'Missing skill: '+s),
+                        recommendation:'POTENTIAL fit based on the available match summary.'
+                    };
+                    el.modalContent.innerHTML=modalMarkup(derived,meta,fallback,candidateId,rank);
+                }else{
+                    el.modalContent.innerHTML=errorBox();
+                }
+            }
+        }
+        function closeModal(){
+            el.modal.classList.remove('open');
+            el.modal.setAttribute('aria-hidden','true');
+            el.modalContent.innerHTML='';
+        }
+        function bindEvents(){
+            el.navButtons.forEach(btn=>btn.addEventListener('click',()=>showSection(btn.dataset.go)));
+            el.jobSearch.addEventListener('input',filterBrowse);
+            el.findBtn.addEventListener('click',()=>findMatches());
+            document.body.addEventListener('click',e=>{
+                const a=e.target.closest('[data-action="view-matches"]');
+                if(a){const id=a.dataset.jobId;showSection('match');el.jdSelect.value=id;findMatches(id);return;}
+                const b=e.target.closest('[data-action="browse-match"]');
+                if(b){const id=b.dataset.jobId;showSection('match');el.jdSelect.value=id;findMatches(id);return;}
+                const c=e.target.closest('[data-action="full-analysis"]');
+                if(c){openModal(c.dataset.jobId,c.dataset.candidateId,c.dataset.rank);}
+            });
+            el.modalClose.addEventListener('click',closeModal);
+            el.modal.addEventListener('click',e=>{if(e.target===el.modal)closeModal()});
+            document.addEventListener('keydown',e=>{if(e.key==='Escape'&&el.modal.classList.contains('open'))closeModal()});
+        }
+        async function init(){
+            bindEvents();
+            await loadApiStatus();
+            await loadDashboard();
+            await loadCandidateCount();
+        }
+        init();
+    </script>
+</body>
+</html>
